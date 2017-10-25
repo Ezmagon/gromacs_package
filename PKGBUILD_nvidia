@@ -1,0 +1,46 @@
+# Maintainer: Matthijs Tadema <M.J.Tadema@gmail.com>
+
+pkgname=gromacs
+pkgver=2016.4
+pkgrel=1
+pkgdesc="Molecular dynamics package"
+arch=('x86_64')
+license=('LGPL')
+url='http://www.gromacs.org/'
+makedepends=('cmake' 'libxml2' 'hwloc' 'ocl-icd' 'opencl-headers')
+depends=('lapack' 'zlib' 'libx11' 'opencl-nvidia' 'cuda' 'fftw')
+optdepends=('cuda: Nvidia GPU support'
+            'openmotif:  needed for gmx view'
+            'perl: needed for demux.pl and xplor2gmx.pl'
+	    'opencl-nvidia: OpenCL support for Nvidia GPU')
+source=("ftp://ftp.gromacs.org/pub/$pkgname/$pkgname-$pkgver.tar.gz")
+md5sums=('19c8b5c85f3ec62df79d2249a3c272f8')
+
+build() {
+	tar xfz $pkgname-$pkgver.tar.gz
+	cd "$pkgname-$pkgver"
+	mkdir -p build
+	cd build
+	cmake .. \
+		-DGMX_BUILD_OWN_FFTW=OFF \
+		-DREGRESSIONTEST_DOWNLOAD=ON \
+		-DCMAKE_C_COMPILER=gcc \
+		-DCMAKE_CXX_COMPILER=g++ \
+		-DGMX_GPU=on \
+		-DGMX_USE_OPENCL=on \
+		-DBUILD_SHARED_LIBS=off \
+		-DGMX_FFT_LIBRARY=fftw3
+	make
+}
+
+check() {
+	cd "$pkgname-$pkgver"
+	cd build
+	make check
+}
+
+package() {
+	cd "$pkgname-$pkgver"
+	cd build
+	make DESTDIR="$pkgdir/" install
+}
